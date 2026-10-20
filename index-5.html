@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tatort-Raster</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="50 Krimi-Logikrätsel: Platziere die Verdächtigen und finde den Täter.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Layout: Rätselheft in Farbe – jeder Fall bekommt seinen eigenen Farbton (--h), Spielansicht passt auf einen Handybildschirm */
+:root{
+  --h:12;
+  --ink:#1d1b2e; --muted:#5d5a72; --paper:#ffffff;
+  --bg:hsl(var(--h) 85% 94%); --bg2:hsl(calc(var(--h) + 45) 90% 90%);
+  --accent:hsl(var(--h) 72% 38%); --accent-soft:hsl(var(--h) 85% 88%);
+  --wall:hsl(var(--h) 45% 20%);
+  --pA:#e8590c; --pB:#1c7ed6; --pC:#2b9348; --pD:#9c36b5; --pE:#d6336c; --pV:#1d1b2e;
+  --display:"Bricolage Grotesque",Georgia,serif; --body:Figtree,system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);-webkit-tap-highlight-color:transparent;
+  background-image:radial-gradient(circle at 0% 0%,var(--bg2) 0,transparent 55%),radial-gradient(circle at 100% 100%,hsl(calc(var(--h) - 40) 90% 91%) 0,transparent 50%);
+  background-attachment:fixed;transition:background-color .4s}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:980px;margin:0 auto;padding-block:10px 24px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.1;text-wrap:balance}
+
+/* Startseite */
+.hero{position:relative;border-radius:24px;padding:22px 20px 18px;margin-top:6px;color:#fff;overflow:hidden;
+  background:linear-gradient(120deg,#ff6b3d 0%,#f72585 38%,#7209b7 70%,#3a0ca3 100%);box-shadow:0 10px 30px rgba(114,9,183,.25)}
+.hero::after{content:"🔍";position:absolute;right:-6px;bottom:-18px;font-size:110px;opacity:.22;transform:rotate(-12deg)}
+.hero .kicker{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;opacity:.9}
+.hero h1{font-size:clamp(36px,10vw,58px);font-weight:800;margin:4px 0 6px;letter-spacing:-.01em}
+.hero p{margin:0;max-width:40ch;opacity:.95}
+.hero-row{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,.22);border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px;backdrop-filter:blur(4px)}
+.pill.btn{background:#fff;color:#7209b7}
+.meter{flex:1;min-width:80px;height:8px;background:rgba(255,255,255,.3);border-radius:8px;overflow:hidden}
+.meter i{display:block;height:100%;background:#fff;border-radius:8px}
+.group{margin-top:18px}
+.group h3{font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px;margin:0 2px 8px}
+.group h3 small{font-family:var(--body);font-weight:600;color:var(--muted);font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (min-width:700px){.tiles{grid-template-columns:repeat(10,1fr)}}
+.tile{--h:0;position:relative;aspect-ratio:1;border-radius:14px;background:hsl(var(--h) 85% 80%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  box-shadow:inset 0 -4px 0 hsl(var(--h) 60% 62%);transition:transform .12s}
+.tile:active{transform:scale(.94)}
+.tile .e{font-size:22px;line-height:1}
+.tile b{font-family:var(--display);font-size:15px;color:hsl(var(--h) 60% 20%);line-height:1.1;margin-top:2px}
+.tile.done::after{content:"✓";position:absolute;top:-5px;right:-5px;width:20px;height:20px;border-radius:50%;background:#2b9348;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--bg)}
+.foot{text-align:center;color:var(--muted);font-size:12px;margin-top:20px}
+.foot button{text-decoration:underline;color:var(--muted);font-size:12px;margin-top:4px}
+
+/* Spielansicht */
+.top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ib{width:40px;height:40px;flex:none;border-radius:12px;background:var(--paper);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;box-shadow:0 2px 0 hsl(var(--h) 50% 80%)}
+.top .t{flex:1;min-width:0}
+.top h2{font-size:19px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .sub{font-size:12px;color:var(--muted);font-weight:600}
+.story{font-size:13px;line-height:1.35;background:var(--accent-soft);color:hsl(var(--h) 55% 22%);border-radius:12px;padding:7px 11px;margin-bottom:10px}
+.story b{font-weight:800}
+.play{display:grid;gap:10px}
+@media (min-width:760px){.play{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:start;gap:20px}}
+.boardcol{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.board{display:grid;width:min(100%,520px,calc(100svh - 500px));min-width:260px;max-width:100%;aspect-ratio:1;border:4px solid var(--wall);border-radius:12px;overflow:hidden;background:var(--wall);gap:0;user-select:none;touch-action:manipulation;box-shadow:0 8px 24px hsl(var(--h) 50% 40% / .25)}
+.cell{position:relative;display:flex;align-items:center;justify-content:center;font-size:clamp(17px,5vw,26px);cursor:pointer;border:1px solid hsl(var(--h) 30% 30% / .12)}
+.cell.wt{border-top:3px solid var(--wall)}.cell.wb{border-bottom:3px solid var(--wall)}.cell.wl{border-left:3px solid var(--wall)}.cell.wr{border-right:3px solid var(--wall)}
+.cell .rl{position:absolute;z-index:2;top:0;left:3px;font-size:8.5px;font-weight:800;color:hsl(var(--h) 40% 18% / .8);line-height:1.1;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;letter-spacing:.03em;line-height:1.35;padding-top:2px}
+.cell .obj{pointer-events:none;filter:saturate(1.15)}
+.cell.deco::before{content:"";position:absolute;inset:3px;border-radius:5px;background:repeating-linear-gradient(45deg,hsl(var(--h) 40% 30% / .14) 0 3px,transparent 3px 7px);pointer-events:none}
+.cell.blocked{background-image:linear-gradient(hsl(0 0% 0% / .06),hsl(0 0% 0% / .06))}
+.cell .x{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:hsl(var(--h) 40% 25% / .55);font-size:clamp(18px,6vw,28px);font-weight:400;pointer-events:none}
+.tok{position:absolute;width:74%;height:74%;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-family:var(--display);font-size:clamp(14px,4.4vw,21px);border:2.5px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.3);pointer-events:none;animation:pop .18s ease-out}
+@keyframes pop{from{transform:scale(.5)}to{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.tok{animation:none}.tile{transition:none}}
+.cell.conflict .tok{box-shadow:0 0 0 3px #e03131,0 3px 8px rgba(0,0,0,.3)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:center;font-size:12px;color:var(--muted);font-weight:600}
+.legend .blk{color:#c92a2a}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.chip{display:flex;align-items:center;gap:4px;background:var(--paper);border-radius:999px;padding:2px 9px 2px 2px;font-size:12.5px;font-weight:700;box-shadow:0 2px 0 hsl(var(--h) 40% 82%);border:2px solid transparent}
+.chip .d{width:22px;height:22px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;font-family:var(--display)}
+.chip.sel{border-color:var(--ink)}
+.chip.placed{opacity:.5}
+.chip.mk .d{background:transparent;border:2px dashed var(--muted);color:var(--muted)}
+.status{font-size:12.5px;color:var(--muted);font-weight:600;text-align:center;min-height:18px}
+.status.warn{color:#c92a2a}
+.clues{background:var(--paper);border-radius:16px;padding:6px;box-shadow:0 4px 16px hsl(var(--h) 50% 40% / .12);min-width:0}
+.clue{display:flex;gap:8px;align-items:flex-start;width:100%;text-align:left;padding:3px 7px;border-radius:9px;font-size:13.5px;line-height:1.35}
+.clue .n{flex:none;width:20px;height:20px;border-radius:7px;background:var(--accent-soft);color:hsl(var(--h) 60% 25%);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.clue.used{color:#a6a3b8;text-decoration:line-through}
+.clue.used .n{background:#ecebf2;color:#a6a3b8}
+.clue.rule{font-weight:700;color:hsl(var(--h) 60% 28%)}
+.clue.rule .n{background:var(--accent);color:#fff}
+.nm{font-weight:800}
+
+/* Dialoge */
+.modal{position:fixed;inset:0;background:rgba(29,27,46,.55);display:none;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:10}
+.modal.on{display:flex}
+.card{background:var(--paper);border-radius:22px;max-width:420px;width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center;max-height:100%;overflow:auto}
+.card h3{font-size:24px;font-weight:800;margin-bottom:6px}
+.card p{margin:6px 0 14px;color:var(--muted)}
+.card .big{font-size:46px;line-height:1.2}
+.card ul{text-align:left;padding-left:20px;margin:8px 0 14px}
+.card li{margin:5px 0}
+.acts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.btn{border-radius:12px;padding:10px 16px;font-weight:800;background:#ecebf2}
+.btn.primary{background:var(--accent);color:#fff;box-shadow:0 3px 0 hsl(var(--h) 60% 35%)}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:11;overflow:hidden}
+.confetti i{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;animation:fall 1.6s ease-in forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<div class="modal" id="modal"><div class="card" id="card"></div></div>
+
+<script>
+const PUZZLES = [{"id":1,"title":"Tod in der Backstube","place":"in der Bäckerei Goldkruste","level":"leicht","n":4,"rooms":[[2,2,1,1],[2,2,0,1],[0,2,0,1],[0,0,0,1]],"roomNames":["Backstube","Hof","Büro"],"cells":[[0,3,0,3],[0,1,2,0],[2,1,1,4],[2,1,1,2]],"objects":{"1":{"name":"Hocker","emoji":"🪑"},"2":{"name":"Matte","emoji":"🟫"},"3":{"name":"Ofen","emoji":"🔥"},"4":{"name":"Regal","emoji":"🗄️"}},"persons":["Herr Brandt","Anna","Bruno","Clara"],"solution":[[0,2],[1,3],[3,0],[2,1]],"killer":1,"clues":["Clara saß auf einem Hocker.","Anna war in der 2. Reihe von oben.","Bruno war in der 1. Spalte von links.","Herr Brandt war nicht in der Backstube.","Clara war weiter oben als Bruno."],"icon":"🥐"},{"id":2,"title":"Das letzte Kapitel","place":"in der Buchhandlung Seitenwind","level":"leicht","n":4,"rooms":[[2,2,2,2],[1,2,2,0],[1,1,0,0],[1,1,0,0]],"roomNames":["Kasse","Antiquariat","Leseecke"],"cells":[[0,2,0,0],[1,1,0,3],[2,3,0,2],[1,4,1,0]],"objects":{"1":{"name":"Sessel","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Bücherregal","emoji":"📚"},"4":{"name":"Pflanze","emoji":"🪴"}},"persons":["Frau Kessler","Annelie","Berta","Carl"],"solution":[[3,3],[1,1],[0,0],[2,2]],"killer":3,"clues":["Berta war in der 1. Reihe von oben.","Frau Kessler war in der 4. Spalte von links.","Berta war in der 1. Spalte von links.","Carl war direkt neben einem Bücherregal.","Annelie war weiter oben als Carl."],"icon":"📖"},{"id":3,"title":"Schachmatt","place":"beim Schachturnier im Rathaus","level":"leicht","n":4,"rooms":[[0,0,1,1],[0,1,1,1],[0,0,1,1],[0,0,2,2]],"roomNames":["Garderobe","Foyer","Buffet"],"cells":[[1,1,0,3],[2,1,1,0],[3,0,2,2],[0,2,4,0]],"objects":{"1":{"name":"Stuhl","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Schachtisch","emoji":"♟️"},"4":{"name":"Pflanze","emoji":"🪴"}},"persons":["Herr Lindner","Adrian","Benno","Chiara"],"solution":[[1,2],[0,0],[3,1],[2,3]],"killer":3,"clues":["Herr Lindner war im Foyer.","Herr Lindner saß auf einem Stuhl.","Chiara stand auf einem Teppich.","Adrian war in der 1. Spalte von links.","Chiara war in der 4. Spalte von links.","Herr Lindner war weiter oben als Benno."],"icon":"♟️"},{"id":4,"title":"Letzter Akt","place":"im Opernhaus Belcanto","level":"leicht","n":4,"rooms":[[1,0,0,0],[1,1,0,0],[1,1,0,0],[1,1,2,2]],"roomNames":["Garderobe","Loge","Bühne"],"cells":[[1,0,1,0],[3,0,0,1],[1,1,2,2],[3,2,0,4]],"objects":{"1":{"name":"Samtsessel","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Säule","emoji":"🏛️"},"4":{"name":"Notenpult","emoji":"🎼"}},"persons":["Frau Moser","Alma","Bianca","Constantin"],"solution":[[0,0],[3,2],[1,3],[2,1]],"killer":3,"clues":["Constantin war in der Loge.","Alma war direkt neben einem Notenpult.","Alma und Constantin waren diagonal direkt nebeneinander.","Frau Moser war weiter links als Bianca."],"icon":"🎭"},{"id":5,"title":"Bittere Bohnen","place":"im Café Morgenrot","level":"leicht","n":4,"rooms":[[0,0,2,2],[0,1,2,2],[0,1,2,2],[0,1,1,2]],"roomNames":["Terrasse","Rösterei","Küche"],"cells":[[1,3,2,2],[0,0,0,2],[4,0,1,0],[0,2,3,1]],"objects":{"1":{"name":"Barhocker","emoji":"🪑"},"2":{"name":"Fußmatte","emoji":"🟫"},"3":{"name":"Tisch","emoji":"🟤"},"4":{"name":"Kaffeemaschine","emoji":"☕"}},"persons":["Herr Albrecht","Anton","Bastian","Carla"],"solution":[[0,2],[2,3],[1,1],[3,0]],"killer":1,"clues":["Anton war in der 3. Reihe von oben.","Bastian war in der 2. Reihe von oben.","Herr Albrecht war in der 3. Spalte von links.","Bastian war direkt neben einem Tisch.","Carla war nicht in der Küche."],"icon":"☕"},{"id":6,"title":"Hoher Einsatz","place":"im Casino Fortuna","level":"leicht","n":4,"rooms":[[1,1,0,0],[1,1,0,0],[2,2,2,0],[2,2,2,0]],"roomNames":["Pokerraum","Bar","Roulette"],"cells":[[1,3,4,1],[0,0,3,0],[0,0,2,0],[2,1,2,0]],"objects":{"1":{"name":"Sessel","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Spieltisch","emoji":"🎰"},"4":{"name":"Palme","emoji":"🌴"}},"persons":["Frau Winter","Amelie","Bella","Cedric"],"solution":[[3,2],[0,3],[2,1],[1,0]],"killer":2,"clues":["Cedric war an der Bar.","Frau Winter stand auf einem Teppich.","Amelie war in der 1. Reihe von oben.","Bella saß nicht auf einem Sessel.","Frau Winter und Bella waren diagonal direkt nebeneinander."],"icon":"🎰"},{"id":7,"title":"Ernte des Todes","place":"auf dem Bauernhof Lindenhof","level":"leicht","n":4,"rooms":[[1,1,1,1],[2,0,0,1],[2,2,0,0],[2,2,0,0]],"roomNames":["Hofladen","Werkstatt","Küche"],"cells":[[2,4,1,0],[0,2,0,3],[1,0,0,2],[0,1,1,3]],"objects":{"1":{"name":"Heuballen","emoji":"🌾"},"2":{"name":"Strohmatte","emoji":"🟫"},"3":{"name":"Traktor","emoji":"🚜"},"4":{"name":"Kuh","emoji":"🐄"}},"persons":["Herr Krüger","Arne","Bernd","Celine"],"solution":[[2,3],[1,2],[3,1],[0,0]],"killer":1,"clues":["Herr Krüger war in der 3. Reihe von oben.","Bernd war in der 4. Reihe von oben.","Arne war nicht in der Werkstatt.","Celine war weiter links als Arne."],"icon":"🚜"},{"id":8,"title":"Abgestempelt","place":"im Postamt Gleisdorf","level":"leicht","n":4,"rooms":[[2,2,0,0],[2,2,2,0],[1,1,0,0],[1,1,1,0]],"roomNames":["Sortierraum","Lager","Postfächer"],"cells":[[0,1,2,2],[1,1,0,0],[1,2,0,4],[2,3,3,0]],"objects":{"1":{"name":"Stuhl","emoji":"🪑"},"2":{"name":"Fußmatte","emoji":"🟫"},"3":{"name":"Paketberg","emoji":"📦"},"4":{"name":"Briefkasten","emoji":"📮"}},"persons":["Frau Sommer","Aylin","Birte","Clemens"],"solution":[[3,0],[2,1],[1,3],[0,2]],"killer":1,"clues":["Clemens war im Sortierraum.","Clemens stand auf einer Fußmatte.","Frau Sommer war in der 1. Spalte von links.","Clemens war in der 3. Spalte von links.","Frau Sommer war nicht im Sortierraum.","Aylin war nicht im selben Raum wie Clemens.","Aylin war weiter oben als Frau Sommer."],"icon":"📮"},{"id":9,"title":"Tödliche Bahn","place":"in der Eishalle Polarstern","level":"leicht","n":4,"rooms":[[1,1,2,2],[1,0,3,3],[1,0,3,3],[0,0,0,3]],"roomNames":["Eisfläche","Kiosk","Kabine","Tribüne"],"cells":[[2,3,0,0],[1,1,0,4],[1,1,3,2],[1,2,0,4]],"objects":{"1":{"name":"Bank","emoji":"🪑"},"2":{"name":"Gummimatte","emoji":"🟫"},"3":{"name":"Eismaschine","emoji":"🧊"},"4":{"name":"Bande","emoji":"🚧"}},"persons":["Herr Vogel","Albert","Björn","Cora"],"solution":[[1,1],[3,2],[2,3],[0,0]],"killer":1,"clues":["Björn war auf der Tribüne.","Herr Vogel saß auf einer Bank.","Cora war in der 1. Spalte von links.","Cora war direkt neben einer Eismaschine.","Albert saß nicht auf einer Bank."],"icon":"⛸️"},{"id":10,"title":"Das Gift im Glas","place":"auf dem Weingut Sonnenhang","level":"leicht","n":4,"rooms":[[1,1,1,1],[2,2,3,1],[2,3,3,0],[2,3,0,0]],"roomNames":["Kelterhaus","Probierstube","Büro","Keller"],"cells":[[2,3,2,0],[0,4,3,1],[1,0,0,1],[2,1,4,0]],"objects":{"1":{"name":"Stuhl","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Fass","emoji":"🛢️"},"4":{"name":"Weinrebe","emoji":"🍇"}},"persons":["Frau Hartmann","Antonia","Brigitte","Christoph"],"solution":[[1,3],[2,1],[0,2],[3,0]],"killer":2,"clues":["Frau Hartmann saß auf einem Stuhl.","Brigitte stand auf einem Teppich.","Christoph stand auf einem Teppich.","Antonia war weiter links als Brigitte."],"icon":"🍷"},{"id":11,"title":"Endstation","place":"im Nachtzug nach Wien","level":"leicht","n":4,"rooms":[[3,3,0,0],[3,3,2,0],[1,1,2,0],[1,1,2,0]],"roomNames":["Schlafwagen","Führerstand","Speisewagen","Abteil"],"cells":[[3,2,1,0],[2,1,0,3],[2,1,1,0],[4,4,0,1]],"objects":{"1":{"name":"Sitz","emoji":"💺"},"2":{"name":"Läufer","emoji":"🟫"},"3":{"name":"Koffer","emoji":"🧳"},"4":{"name":"Tisch","emoji":"🟤"}},"persons":["Herr Engel","Ali","Benedikt","Cosima"],"solution":[[1,0],[0,1],[3,2],[2,3]],"killer":1,"clues":["Cosima war im Schlafwagen.","Herr Engel war in der 2. Reihe von oben.","Ali war weiter oben als Herr Engel.","Cosima war weiter oben als Benedikt."],"icon":"🚂"},{"id":12,"title":"Kalter Kaffee","place":"im Großraumbüro der Firma Datenfluss","level":"leicht","n":4,"rooms":[[3,0,0,0],[3,1,1,1],[2,2,2,1],[2,2,2,1]],"roomNames":["Chefbüro","Empfang","Konferenzraum","Serverraum"],"cells":[[1,2,2,2],[1,0,4,0],[3,4,1,3],[0,0,0,0]],"objects":{"1":{"name":"Bürostuhl","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Schreibtisch","emoji":"🖥️"},"4":{"name":"Pflanze","emoji":"🪴"}},"persons":["Frau Fuchs","Annika","Betty","Cem"],"solution":[[2,2],[1,3],[0,0],[3,1]],"killer":3,"clues":["Betty war im Serverraum.","Betty saß auf einem Bürostuhl.","Frau Fuchs war in der 3. Reihe von oben.","Annika war direkt neben einer Pflanze.","Annika war direkt neben einem Schreibtisch.","Frau Fuchs und Annika waren diagonal direkt nebeneinander.","Betty war weiter links als Frau Fuchs."],"icon":"💼"},{"id":13,"title":"Tod im Treibhaus","place":"im Botanischen Garten","level":"leicht","n":4,"rooms":[[3,3,3,3],[1,2,2,2],[1,2,0,2],[1,0,0,0]],"roomNames":["Palmenhaus","Kakteenhaus","Teich","Café"],"cells":[[0,0,0,3],[3,2,2,2],[1,2,1,0],[1,4,1,1]],"objects":{"1":{"name":"Bank","emoji":"🪑"},"2":{"name":"Kiesweg","emoji":"🟫"},"3":{"name":"Kaktus","emoji":"🌵"},"4":{"name":"Farn","emoji":"🌿"}},"persons":["Herr Richter","Aaron","Boris","Charlotte"],"solution":[[2,1],[1,3],[0,0],[3,2]],"killer":1,"clues":["Boris war im Café.","Charlotte war im Palmenhaus.","Aaron war in der 4. Spalte von links.","Herr Richter war direkt neben einem Farn."],"icon":"🌿"},{"id":14,"title":"Ausgeschnitten","place":"im Friseursalon Schnittig","level":"leicht","n":4,"rooms":[[2,2,3,3],[2,2,3,3],[1,0,0,0],[1,1,1,1]],"roomNames":["Kosmetik","Waschbereich","Lager","Empfang"],"cells":[[2,2,0,1],[1,2,1,1],[3,0,0,0],[1,4,3,2]],"objects":{"1":{"name":"Frisierstuhl","emoji":"💺"},"2":{"name":"Matte","emoji":"🟫"},"3":{"name":"Spiegel","emoji":"🪞"},"4":{"name":"Pflanze","emoji":"🪴"}},"persons":["Frau Wolf","Agnes","Bettina","Colin"],"solution":[[0,2],[2,1],[3,0],[1,3]],"killer":3,"clues":["Frau Wolf war in der 1. Reihe von oben.","Agnes war in der 3. Reihe von oben.","Frau Wolf war in der 3. Spalte von links.","Colin war nicht im Lager.","Bettina war weiter links als Frau Wolf."],"icon":"💇"},{"id":15,"title":"Gefährliche Tiefe","place":"im Hallenbad Wellenreich","level":"leicht","n":4,"rooms":[[2,1,1,1],[2,2,3,3],[0,2,2,3],[0,0,0,3]],"roomNames":["Sauna","Kiosk","Technik","Bademeister"],"cells":[[4,0,0,4],[2,3,2,1],[0,2,1,1],[1,3,0,0]],"objects":{"1":{"name":"Liege","emoji":"🛋️"},"2":{"name":"Gummimatte","emoji":"🟫"},"3":{"name":"Sprungturm","emoji":"🏊"},"4":{"name":"Palme","emoji":"🌴"}},"persons":["Herr Baumann","Alexander","Balthasar","Carina"],"solution":[[1,0],[3,3],[0,1],[2,2]],"killer":3,"clues":["Herr Baumann war im Technikraum.","Balthasar war am Kiosk.","Carina war im Technikraum.","Carina war nicht in der Sauna.","Balthasar stand nicht auf einer Gummimatte.","Herr Baumann und Balthasar waren diagonal direkt nebeneinander.","Herr Baumann war weiter links als Balthasar."],"icon":"🏊"},{"id":16,"title":"Kunstfehler","place":"im Museum für moderne Kunst","level":"leicht","n":5,"rooms":[[0,0,2,2,2],[3,3,2,2,2],[3,3,3,2,1],[3,3,1,1,1],[3,1,1,1,1]],"roomNames":["Shop","Café","Gemäldesaal","Foyer"],"cells":[[1,1,0,4,3],[0,4,0,1,2],[0,1,1,0,1],[3,0,0,0,2],[0,2,0,2,2]],"objects":{"1":{"name":"Bank","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Skulptur","emoji":"🗿"},"4":{"name":"Vitrine","emoji":"🖼️"}},"persons":["Frau Keller","Alina","Britta","Conrad","David"],"solution":[[0,2],[3,1],[4,4],[1,3],[2,0]],"killer":3,"clues":["Frau Keller war im Gemäldesaal.","Britta war in der 5. Spalte von links.","Conrad war in der 4. Spalte von links.","David war in der 1. Spalte von links.","Conrad war direkt neben einer Vitrine.","Alina saß nicht auf einer Bank.","Alina war weiter oben als Britta."],"icon":"🖼️"},{"id":17,"title":"Schachtel voll Sünden","place":"in der Pralinenmanufaktur Zartbitter","level":"leicht","n":5,"rooms":[[3,3,2,2,2],[3,3,3,3,2],[1,1,3,3,2],[1,1,1,0,0],[1,0,0,0,0]],"roomNames":["Manufaktur","Laden","Kühlraum","Verkostung"],"cells":[[1,4,0,0,0],[1,1,0,4,1],[0,0,3,0,3],[2,2,0,0,3],[1,2,2,0,0]],"objects":{"1":{"name":"Hocker","emoji":"🪑"},"2":{"name":"Matte","emoji":"🟫"},"3":{"name":"Kessel","emoji":"🍫"},"4":{"name":"Regal","emoji":"🗄️"}},"persons":["Herr Schubert","Alfred","Burkhard","Cleo","Doris"],"solution":[[1,2],[0,4],[3,1],[2,3],[4,0]],"killer":3,"clues":["Alfred war in der 1. Reihe von oben.","Burkhard war in der 4. Reihe von oben.","Herr Schubert war in der 3. Spalte von links.","Niemand war in der Manufaktur.","Herr Schubert und Cleo waren diagonal direkt nebeneinander.","Herr Schubert war weiter oben als Doris."],"icon":"🍫"},{"id":18,"title":"Leuchtfeuer","place":"im Leuchtturm von Hallig Süd","level":"leicht","n":5,"rooms":[[3,3,2,2,2],[3,3,0,2,2],[3,3,0,1,1],[3,0,0,1,1],[0,0,0,1,1]],"roomNames":["Wohnstube","Küche","Laternenraum","Funkraum"],"cells":[[0,3,1,0,1],[2,3,0,1,0],[4,0,2,2,1],[0,0,2,0,3],[2,4,0,0,0]],"objects":{"1":{"name":"Stuhl","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Seilrolle","emoji":"🪢"},"4":{"name":"Anker","emoji":"⚓"}},"persons":["Frau Lorenz","Anja","Babette","Cornelius","Dennis"],"solution":[[4,3],[2,4],[0,2],[1,0],[3,1]],"killer":1,"clues":["Anja war in der Küche.","Dennis war in der Wohnstube.","Frau Lorenz war in der 4. Spalte von links.","Cornelius war direkt neben einem Anker.","Babette war weiter links als Frau Lorenz.","Dennis war weiter oben als Frau Lorenz.","Cornelius war weiter oben als Dennis."],"icon":"🌊"},{"id":19,"title":"Letzte Runde","place":"in der Kneipe Zum Anker","level":"leicht","n":5,"rooms":[[1,2,2,3,3],[1,1,2,3,3],[1,2,2,3,3],[1,1,2,0,0],[1,1,2,0,0]],"roomNames":["Keller","Tresen","Küche","Dartecke"],"cells":[[0,0,0,4,2],[2,0,1,0,2],[0,1,2,1,4],[1,0,0,2,0],[3,0,0,3,0]],"objects":{"1":{"name":"Barhocker","emoji":"🪑"},"2":{"name":"Fußmatte","emoji":"🟫"},"3":{"name":"Tisch","emoji":"🟤"},"4":{"name":"Bierfass","emoji":"🛢️"}},"persons":["Herr Seidel","Armin","Bennet","Claudia","Dana"],"solution":[[3,0],[4,1],[2,3],[1,2],[0,4]],"killer":1,"clues":["Bennet war in der Dartecke.","Dana stand auf einer Fußmatte.","Claudia war in der 2. Reihe von oben.","Claudia war nicht am Tresen.","Herr Seidel war weiter links als Armin.","Dana war weiter oben als Claudia."],"icon":"🍺"},{"id":20,"title":"Tatort Turnhalle","place":"in der Sporthalle am See","level":"leicht","n":5,"rooms":[[1,1,3,3,3],[1,1,3,3,3],[1,1,0,0,0],[2,2,2,0,0],[2,2,2,0,0]],"roomNames":["Halle","Geräteraum","Büro","Tribüne"],"cells":[[4,0,0,1,1],[2,0,2,3,2],[1,0,2,0,0],[0,0,2,1,4],[3,1,0,3,1]],"objects":{"1":{"name":"Bank","emoji":"🪑"},"2":{"name":"Turnmatte","emoji":"🟫"},"3":{"name":"Barren","emoji":"🤸"},"4":{"name":"Basketballkorb","emoji":"🏀"}},"persons":["Frau Graf","Astrid","Bärbel","Caspar","Dieter"],"solution":[[3,0],[4,2],[1,1],[0,4],[2,3]],"killer":1,"clues":["Bärbel war in der 2. Reihe von oben.","Caspar war in der 1. Reihe von oben.","Astrid war in der 3. Spalte von links.","Bärbel war in der 2. Spalte von links.","Astrid war direkt neben einem Barren.","Dieter war direkt neben einem Barren.","Dieter war weiter oben als Frau Graf."],"icon":"🤸"},{"id":21,"title":"Sternennacht","place":"in der Sternwarte Himmelsblick","level":"leicht","n":5,"rooms":[[3,3,2,1,0],[3,2,2,1,0],[3,3,2,1,0],[3,3,2,1,0],[2,2,2,1,0]],"roomNames":["Bibliothek","Dachterrasse","Planetarium","Kuppel"],"cells":[[3,0,0,4,0],[0,2,3,0,2],[0,2,1,2,0],[1,1,4,0,0],[0,0,0,3,1]],"objects":{"1":{"name":"Stuhl","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Teleskop","emoji":"🔭"},"4":{"name":"Globus","emoji":"🌍"}},"persons":["Herr Pohl","Axel","Bodo","Carmen","Daria"],"solution":[[4,1],[1,3],[3,4],[0,2],[2,0]],"killer":3,"clues":["Axel war auf der Dachterrasse.","Axel war in der 2. Reihe von oben.","Daria war in der 3. Reihe von oben.","Herr Pohl war nicht in der Kuppel.","Daria war weiter links als Herr Pohl.","Herr Pohl war weiter links als Carmen.","Carmen war weiter links als Bodo."],"icon":"🔭"},{"id":22,"title":"Blumen fürs Grab","place":"im Blumenladen Blütenzauber","level":"leicht","n":5,"rooms":[[3,3,3,1,1],[3,3,0,1,1],[0,0,0,1,2],[0,0,0,2,2],[0,0,2,2,2]],"roomNames":["Werkstatt","Büro","Laden","Kühlraum"],"cells":[[0,4,2,1,2],[2,0,0,3,1],[0,3,1,1,4],[0,0,0,2,1],[0,0,0,2,0]],"objects":{"1":{"name":"Hocker","emoji":"🪑"},"2":{"name":"Matte","emoji":"🟫"},"3":{"name":"Blumeneimer","emoji":"💐"},"4":{"name":"Topfpalme","emoji":"🌴"}},"persons":["Frau Haas","Aurelia","Beate","Claus","Dominik"],"solution":[[2,3],[4,2],[1,4],[0,0],[3,1]],"killer":2,"clues":["Aurelia war im Laden.","Claus war in der 1. Reihe von oben.","Dominik war in der 4. Reihe von oben.","Beate war in der 5. Spalte von links.","Frau Haas und Beate waren diagonal direkt nebeneinander."],"icon":"💐"},{"id":23,"title":"Spurlos verschneit","place":"in der Skihütte Gipfelglück","level":"leicht","n":5,"rooms":[[3,3,1,1,1],[3,3,1,1,1],[0,0,0,1,2],[0,0,0,2,2],[2,2,2,2,2]],"roomNames":["Stube","Terrasse","Küche","Schlafraum"],"cells":[[1,1,0,0,3],[0,3,0,2,2],[3,1,2,1,0],[4,0,1,2,0],[2,0,1,0,4]],"objects":{"1":{"name":"Bank","emoji":"🪑"},"2":{"name":"Fell","emoji":"🟫"},"3":{"name":"Kamin","emoji":"🔥"},"4":{"name":"Ski","emoji":"🎿"}},"persons":["Herr Sauer","Achim","Bertram","Cäcilie","Dora"],"solution":[[0,2],[3,4],[2,1],[1,3],[4,0]],"killer":3,"clues":["Herr Sauer war auf der Terrasse.","Bertram war in der Stube.","Cäcilie stand auf einem Fell.","Dora war in der 5. Reihe von oben.","Achim war direkt neben einem Paar Ski.","Achim war nicht in der Stube."],"icon":"⛷️"},{"id":24,"title":"Zahltag","place":"in der Bankfiliale Sparhafen","level":"leicht","n":5,"rooms":[[1,1,1,1,1],[0,0,1,0,1],[0,0,0,0,2],[3,3,3,2,2],[3,3,3,2,2]],"roomNames":["Archiv","Tresorraum","Foyer","Beratung"],"cells":[[0,1,3,2,1],[0,0,3,0,0],[0,3,2,2,2],[2,0,4,1,4],[0,1,0,0,0]],"objects":{"1":{"name":"Stuhl","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Tresor","emoji":"🔒"},"4":{"name":"Pflanze","emoji":"🪴"}},"persons":["Frau Kuhn","Ada","Blanka","Carsten","Daniel"],"solution":[[2,3],[1,1],[3,0],[0,4],[4,2]],"killer":1,"clues":["Frau Kuhn war im Archiv.","Blanka stand auf einem Teppich.","Carsten war in der 1. Reihe von oben.","Daniel war in der 3. Spalte von links.","Ada stand nicht auf einem Teppich.","Blanka und Daniel waren im selben Raum."],"icon":"🏦"},{"id":25,"title":"Fehlstart","place":"auf der Rennbahn Grünwiese","level":"leicht","n":5,"rooms":[[2,2,2,2,3],[2,2,2,2,3],[0,0,0,3,3],[1,0,1,3,3],[1,1,1,3,3]],"roomNames":["VIP-Zelt","Boxengasse","Stall","Tribüne"],"cells":[[0,0,1,1,0],[2,0,1,0,0],[2,0,1,3,0],[3,0,4,0,1],[2,0,4,0,2]],"objects":{"1":{"name":"Bank","emoji":"🪑"},"2":{"name":"Rasenstück","emoji":"🟩"},"3":{"name":"Hürde","emoji":"🚧"},"4":{"name":"Pferd","emoji":"🐎"}},"persons":["Herr Franke","Andreas","Basti","Corinna","Delia"],"solution":[[0,2],[1,3],[3,4],[4,0],[2,1]],"killer":1,"clues":["Delia war im VIP-Zelt.","Basti saß auf einer Bank.","Andreas war in der 2. Reihe von oben.","Andreas war in der 4. Spalte von links.","Delia war in der 2. Spalte von links.","Basti war ganz allein in einem Raum.","Herr Franke war weiter oben als Corinna."],"icon":"🏇"},{"id":26,"title":"Totenstille","place":"in der Klosterbibliothek St. Anselm","level":"leicht","n":5,"rooms":[[0,0,0,1,1],[2,2,0,1,1],[3,2,0,1,1],[3,2,2,2,1],[3,3,3,3,3]],"roomNames":["Skriptorium","Kapelle","Archiv","Kreuzgang"],"cells":[[0,1,0,1,0],[0,0,2,0,2],[3,3,1,2,0],[4,0,4,0,2],[0,0,0,3,1]],"objects":{"1":{"name":"Kirchenbank","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Kerzenständer","emoji":"🕯️"},"4":{"name":"Bücherregal","emoji":"📚"}},"persons":["Frau Busch","Anita","Benita","Calvin","Dirk"],"solution":[[1,0],[3,3],[2,2],[0,4],[4,1]],"killer":1,"clues":["Dirk war im Kreuzgang.","Calvin war in der 1. Reihe von oben.","Anita war in der 4. Spalte von links.","Dirk war in der 2. Spalte von links.","Frau Busch war direkt neben einem Kerzenständer.","Calvin war nicht im Skriptorium.","Dirk war weiter links als Benita."],"icon":"🕯️"},{"id":27,"title":"Unter Strom","place":"im Tonstudio Schallwelle","level":"leicht","n":5,"rooms":[[1,1,2,2,2],[1,1,2,2,2],[1,1,0,0,2],[3,0,0,0,2],[3,3,0,0,0]],"roomNames":["Aufnahmeraum","Lounge","Regie","Lager"],"cells":[[1,0,2,2,0],[1,1,4,3,0],[0,1,3,2,2],[4,3,1,0,0],[0,1,0,0,0]],"objects":{"1":{"name":"Hocker","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Mischpult","emoji":"🎛️"},"4":{"name":"Schlagzeug","emoji":"🥁"}},"persons":["Herr Roth","Arthur","Bernhard","Camilla","Diana"],"solution":[[1,4],[3,2],[0,3],[2,0],[4,1]],"killer":2,"clues":["Camilla war in der Lounge.","Arthur saß auf einem Hocker.","Herr Roth war in der 5. Spalte von links.","Diana war in der 2. Spalte von links.","Herr Roth war direkt neben einem Mischpult.","Bernhard war weiter oben als Herr Roth."],"icon":"🎛️"},{"id":28,"title":"Der Fisch stinkt","place":"auf dem Fischmarkt am Hafen","level":"mittel","n":5,"rooms":[[1,2,2,2,2],[1,2,0,0,0],[1,3,0,0,0],[1,3,3,3,0],[1,1,3,3,3]],"roomNames":["Räucherei","Kühlhaus","Imbiss","Halle"],"cells":[[0,0,0,0,1],[0,0,0,1,3],[1,0,3,4,0],[0,0,2,2,2],[1,2,4,0,0]],"objects":{"1":{"name":"Kiste","emoji":"📦"},"2":{"name":"Gitterrost","emoji":"🟫"},"3":{"name":"Eistheke","emoji":"🐟"},"4":{"name":"Netz","emoji":"🕸️"}},"persons":["Frau Ludwig","Ayla","Bine","Curt","Detlef"],"solution":[[1,2],[2,4],[4,0],[3,3],[0,1]],"killer":1,"clues":["Bine war in der 5. Reihe von oben.","Detlef war in der 2. Spalte von links.","Frau Ludwig war direkt neben einer Eistheke.","Curt war nicht in der Räucherei.","Frau Ludwig und Detlef waren diagonal direkt nebeneinander.","Bine war weiter links als Frau Ludwig.","Ayla war weiter oben als Curt."],"icon":"🐟"},{"id":29,"title":"Ausgecheckt","place":"im Grandhotel Seeblick","level":"mittel","n":5,"rooms":[[2,1,1,1,1],[2,1,1,0,0],[2,1,1,0,0],[2,3,3,0,0],[2,3,3,0,0]],"roomNames":["Bar","Wellness","Restaurant","Suite"],"cells":[[1,3,0,2,1],[0,1,0,2,3],[1,2,0,0,0],[2,0,0,4,0],[4,0,0,0,1]],"objects":{"1":{"name":"Sessel","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Kofferwagen","emoji":"🧳"},"4":{"name":"Palme","emoji":"🌴"}},"persons":["Herr Jäger","Alois","Benjamin","Christa","Dagmar"],"solution":[[1,1],[3,4],[2,0],[4,2],[0,3]],"killer":4,"clues":["Christa war in der Suite.","Herr Jäger saß auf einem Sessel.","Alois war direkt neben einer Palme.","Dagmar saß nicht auf einem Sessel.","Herr Jäger und Benjamin waren diagonal direkt nebeneinander.","Herr Jäger war weiter links als Alois."],"icon":"🏨"},{"id":30,"title":"Gestrandet","place":"im Strandbad Möwennest","level":"mittel","n":5,"rooms":[[0,0,0,0,1],[0,2,0,1,1],[2,2,3,1,1],[2,2,3,1,1],[3,3,3,3,3]],"roomNames":["Kiosk","Bar","Umkleide","Rettungsturm"],"cells":[[0,2,0,1,4],[2,3,0,0,2],[0,0,1,3,1],[2,0,0,4,0],[1,2,0,0,3]],"objects":{"1":{"name":"Liegestuhl","emoji":"🏖️"},"2":{"name":"Handtuch","emoji":"🟫"},"3":{"name":"Sonnenschirm","emoji":"⛱️"},"4":{"name":"Sandburg","emoji":"🏰"}},"persons":["Frau Stein","Aletta","Bea","Cyril","Darius"],"solution":[[3,0],[4,3],[0,2],[2,1],[1,4]],"killer":3,"clues":["Darius war an der Strandbar.","Frau Stein stand auf einem Handtuch.","Aletta war nicht am Kiosk.","Darius saß nicht auf einem Liegestuhl.","Aletta war ganz allein in einem Raum.","Bea war weiter links als Aletta.","Darius war weiter oben als Cyril."],"icon":"🏖️"},{"id":31,"title":"Abgeschminkt","place":"im Zirkus Fantastico","level":"mittel","n":5,"rooms":[[0,0,1,2,2],[0,0,1,2,2],[0,1,1,1,2],[3,3,3,2,2],[3,3,3,3,3]],"roomNames":["Kasse","Garderobe","Tierzelt","Zeltgang"],"cells":[[2,0,2,2,0],[0,0,2,4,0],[3,2,0,1,1],[1,0,0,3,0],[0,0,1,4,1]],"objects":{"1":{"name":"Kiste","emoji":"📦"},"2":{"name":"Sägespäne","emoji":"🟫"},"3":{"name":"Podest","emoji":"🎪"},"4":{"name":"Elefant","emoji":"🐘"}},"persons":["Herr Mertens","Arvid","Bonifaz","Carolin","Doreen"],"solution":[[0,3],[1,0],[3,2],[4,1],[2,4]],"killer":4,"clues":["Arvid war an der Kasse.","Doreen war im Tierzelt.","Herr Mertens stand auf einem Haufen Sägespäne.","Carolin war in der 2. Spalte von links.","Bonifaz saß nicht auf einer Kiste.","Doreen war weiter oben als Bonifaz."],"icon":"🎪"},{"id":32,"title":"Bruchlandung","place":"am Flughafen Nordfeld","level":"mittel","n":5,"rooms":[[2,2,2,3,0],[2,2,2,3,0],[3,3,3,3,0],[3,1,1,1,0],[1,1,1,1,0]],"roomNames":["Gate","Terminal","Lounge","Gepäckband"],"cells":[[4,0,1,0,4],[0,0,3,1,1],[0,0,0,0,2],[0,0,1,0,2],[2,0,0,3,2]],"objects":{"1":{"name":"Sitz","emoji":"💺"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Gepäckwagen","emoji":"🧳"},"4":{"name":"Säule","emoji":"🏛️"}},"persons":["Frau Böhm","Amira","Brunhilde","Corvin","Dustin"],"solution":[[3,0],[2,3],[4,1],[0,2],[1,4]],"killer":1,"clues":["Corvin war in der Lounge.","Dustin saß auf einem Sitz.","Corvin war direkt neben einem Gepäckwagen.","Frau Böhm war nicht im Terminal.","Amira war nicht im Terminal.","Brunhilde war nicht in der Lounge.","Frau Böhm war weiter links als Corvin.","Amira war weiter links als Dustin."],"icon":"✈️"},{"id":33,"title":"Verfahren","place":"im Amtsgericht Lindenstadt","level":"mittel","n":5,"rooms":[[2,1,1,1,1],[2,2,1,1,0],[2,2,3,3,0],[3,3,3,0,0],[3,3,0,0,0]],"roomNames":["Richterzimmer","Gerichtssaal","Archiv","Kantine"],"cells":[[3,0,2,2,0],[1,4,1,0,0],[1,4,1,0,3],[1,3,2,0,2],[0,0,0,1,0]],"objects":{"1":{"name":"Stuhl","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Pult","emoji":"⚖️"},"4":{"name":"Aktenschrank","emoji":"🗄️"}},"persons":["Herr Hahn","Adele","Bert","Cordula","Denise"],"solution":[[4,0],[1,3],[2,2],[0,1],[3,4]],"killer":2,"clues":["Bert war in der 3. Reihe von oben.","Denise war in der 5. Spalte von links.","Cordula war direkt neben einem Pult.","Herr Hahn war nicht im Gerichtssaal.","Herr Hahn saß nicht auf einem Stuhl.","Adele saß nicht auf einem Stuhl.","Herr Hahn war weiter links als Cordula.","Bert war weiter oben als Denise."],"icon":"⚖️"},{"id":34,"title":"Gift und Galle","place":"in der Apotheke Zum Löwen","level":"mittel","n":5,"rooms":[[0,0,0,2,2],[0,0,0,2,2],[3,3,1,2,2],[3,3,1,2,2],[3,3,1,1,1]],"roomNames":["Beratung","Lager","Kühlraum","Labor"],"cells":[[1,1,0,2,2],[1,0,0,0,0],[1,4,0,0,3],[0,2,0,2,4],[0,0,0,1,3]],"objects":{"1":{"name":"Hocker","emoji":"🪑"},"2":{"name":"Matte","emoji":"🟫"},"3":{"name":"Arzneischrank","emoji":"💊"},"4":{"name":"Waage","emoji":"⚖️"}},"persons":["Frau Brenner","Ansgar","Birgit","Chris","Dragan"],"solution":[[2,0],[1,4],[4,1],[0,2],[3,3]],"killer":2,"clues":["Dragan stand auf einer Matte.","Ansgar war in der 2. Reihe von oben.","Frau Brenner war direkt neben einer Waage.","Dragan war nicht im Labor.","Birgit stand nicht auf einer Matte.","Chris war nicht im selben Raum wie Dragan.","Chris war weiter oben als Ansgar."],"icon":"💊"},{"id":35,"title":"Schiffbruch","place":"auf dem Kreuzfahrtschiff Aurora","level":"mittel","n":5,"rooms":[[0,0,0,0,0],[1,1,1,2,2],[1,1,2,2,3],[1,2,2,3,3],[1,3,3,3,3]],"roomNames":["Pool","Speisesaal","Maschinenraum","Deck"],"cells":[[1,0,2,0,0],[3,2,2,1,0],[2,0,0,0,0],[3,4,1,0,0],[2,0,1,4,1]],"objects":{"1":{"name":"Liegestuhl","emoji":"🏖️"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Rettungsring","emoji":"🛟"},"4":{"name":"Anker","emoji":"⚓"}},"persons":["Herr Dietrich","Antje","Bjarne","Clarissa","Daphne"],"solution":[[1,3],[2,4],[4,0],[3,2],[0,1]],"killer":3,"clues":["Daphne war am Pool.","Herr Dietrich war in der 4. Spalte von links.","Daphne war in der 2. Spalte von links.","Antje war nicht im Maschinenraum.","Clarissa war nicht im Speisesaal.","Herr Dietrich und Antje waren diagonal direkt nebeneinander.","Herr Dietrich war weiter oben als Bjarne."],"icon":"🚢"},{"id":36,"title":"Funkstille","place":"im Radiosender Welle 7","level":"mittel","n":5,"rooms":[[2,2,2,2,2],[3,3,3,2,2],[3,3,3,1,2],[0,3,0,1,1],[0,0,0,1,1]],"roomNames":["Küche","Technik","Studio","Archiv"],"cells":[[0,0,2,1,1],[1,2,1,3,2],[0,2,1,2,0],[0,1,0,0,0],[4,4,0,0,3]],"objects":{"1":{"name":"Bürostuhl","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Mikrofon","emoji":"🎙️"},"4":{"name":"Plattenregal","emoji":"💿"}},"persons":["Frau Kraft","Arno","Belinda","Cay","Dietmar"],"solution":[[4,3],[0,2],[3,4],[1,0],[2,1]],"killer":2,"clues":["Frau Kraft war im Technikraum.","Arno stand auf einem Teppich.","Dietmar war in der 3. Reihe von oben.","Cay stand nicht auf einem Teppich.","Dietmar saß nicht auf einem Bürostuhl.","Frau Kraft war weiter links als Belinda."],"icon":"📻"},{"id":37,"title":"Brandheiß","place":"in der Feuerwache Süd","level":"mittel","n":5,"rooms":[[3,3,1,1,1],[3,3,1,1,1],[3,3,1,1,1],[3,3,0,0,0],[2,2,2,0,0]],"roomNames":["Werkstatt","Fahrzeughalle","Funkraum","Küche"],"cells":[[1,0,0,1,1],[3,0,0,0,3],[2,1,0,4,2],[0,2,3,0,0],[2,4,0,2,0]],"objects":{"1":{"name":"Bank","emoji":"🪑"},"2":{"name":"Matte","emoji":"🟫"},"3":{"name":"Löschfahrzeug","emoji":"🚒"},"4":{"name":"Hydrant","emoji":"🧯"}},"persons":["Herr Huber","Asta","Bilal","Celina","Dunja"],"solution":[[1,2],[2,1],[3,4],[0,3],[4,0]],"killer":3,"clues":["Asta saß auf einer Bank.","Dunja stand auf einer Matte.","Bilal war in der 5. Spalte von links.","Celina war nicht in der Küche.","Celina war nicht in der Werkstatt.","Dunja war nicht in der Werkstatt.","Herr Huber und Asta waren diagonal direkt nebeneinander."],"icon":"🚒"},{"id":38,"title":"Meisterwerk","place":"im Atelier von Professor Farbe","level":"mittel","n":6,"rooms":[[4,4,4,4,4,4],[4,0,0,0,0,0],[3,3,3,0,0,0],[3,3,3,0,2,2],[1,1,1,1,2,2],[1,1,2,2,2,2]],"roomNames":["Lager","Malsaal","Bildhauerei","Dachterrasse","Galerie"],"cells":[[2,0,1,0,4,1],[0,3,0,0,0,3],[1,0,0,3,0,0],[0,1,2,0,0,3],[0,0,1,0,4,0],[2,0,4,0,2,2]],"objects":{"1":{"name":"Hocker","emoji":"🪑"},"2":{"name":"Plane","emoji":"🟫"},"3":{"name":"Staffelei","emoji":"🎨"},"4":{"name":"Gipsbüste","emoji":"🗿"}},"persons":["Frau Arnold","Alwin","Barbara","Cenk","Dorian","Emil"],"solution":[[3,1],[4,5],[2,2],[0,3],[5,0],[1,4]],"killer":2,"clues":["Frau Arnold saß auf einem Hocker.","Emil war in der 2. Reihe von oben.","Emil war in der 5. Spalte von links.","Alwin war direkt neben einer Staffelei.","Barbara war nicht im Lager.","Alwin war ganz allein in einem Raum.","Cenk und Emil waren diagonal direkt nebeneinander.","Dorian war weiter links als Frau Arnold."],"icon":"🎨"},{"id":39,"title":"Tiefgefroren","place":"im Supermarkt Frischeparadies","level":"mittel","n":6,"rooms":[[1,2,2,2,2,2],[1,1,4,4,2,2],[1,1,1,4,2,2],[1,1,4,4,3,3],[1,0,4,4,3,3],[0,0,4,4,3,3]],"roomNames":["Obstabteilung","Büro","Kasse","Lager","Backshop"],"cells":[[0,1,2,3,0,0],[0,1,1,3,0,0],[1,0,0,0,0,2],[4,0,0,0,4,2],[1,2,4,3,0,1],[0,2,0,0,0,0]],"objects":{"1":{"name":"Hocker","emoji":"🪑"},"2":{"name":"Fußmatte","emoji":"🟫"},"3":{"name":"Einkaufswagen","emoji":"🛒"},"4":{"name":"Kühltruhe","emoji":"🧊"}},"persons":["Herr Ziegler","Annabell","Brandon","Carlotta","Dörte","Ella"],"solution":[[3,2],[1,1],[2,3],[4,5],[5,4],[0,0]],"killer":2,"clues":["Annabell saß auf einem Hocker.","Carlotta saß auf einem Hocker.","Brandon war in der 4. Spalte von links.","Niemand war an der Kasse.","Herr Ziegler und Brandon waren diagonal direkt nebeneinander.","Annabell war weiter links als Brandon.","Ella war weiter links als Brandon.","Herr Ziegler war weiter oben als Dörte."],"icon":"🛒"},{"id":40,"title":"Endspiel","place":"im Fußballstadion Rote Erde","level":"mittel","n":6,"rooms":[[3,3,3,3,3,4],[3,3,3,3,3,4],[2,2,4,4,4,4],[2,2,2,0,1,4],[2,2,0,0,1,1],[2,2,0,0,0,1]],"roomNames":["Spielfeld","VIP-Loge","Kabine","Tribüne","Presseraum"],"cells":[[2,0,2,0,3,0],[4,0,0,0,0,1],[4,1,3,1,0,0],[0,3,0,0,0,2],[0,0,2,4,0,0],[3,1,2,0,1,2]],"objects":{"1":{"name":"Sitz","emoji":"💺"},"2":{"name":"Rasenstück","emoji":"🟩"},"3":{"name":"Tor","emoji":"🥅"},"4":{"name":"Ballnetz","emoji":"⚽"}},"persons":["Frau Thiel","August","Bettie","Charly","Damian","Erik"],"solution":[[3,0],[1,3],[2,4],[5,1],[4,5],[0,2]],"killer":3,"clues":["Charly saß auf einem Sitz.","Frau Thiel war nicht auf der Tribüne.","August war nicht im Presseraum.","Erik war nicht im Presseraum.","Bettie saß nicht auf einem Sitz.","Niemand war auf dem Spielfeld.","August und Bettie waren diagonal direkt nebeneinander.","Frau Thiel war weiter links als Erik.","Frau Thiel war weiter oben als Charly.","Frau Thiel war weiter oben als Damian."],"icon":"⚽"},{"id":41,"title":"Ausgegraben","place":"bei der Ausgrabung am Römerhügel","level":"mittel","n":6,"rooms":[[2,2,2,0,0,4],[2,2,2,2,0,4],[2,2,2,0,0,4],[0,0,0,0,0,4],[1,1,1,1,4,4],[3,3,3,4,4,4]],"roomNames":["Werkzeugzelt","Bauwagen","Küchenzelt","Fundzelt","Grabungsfeld"],"cells":[[0,0,0,3,4,4],[0,0,0,2,1,1],[0,0,0,1,0,1],[0,4,3,2,0,1],[2,0,2,0,2,0],[1,0,3,1,2,0]],"objects":{"1":{"name":"Klappstuhl","emoji":"🪑"},"2":{"name":"Plane","emoji":"🟫"},"3":{"name":"Amphore","emoji":"🏺"},"4":{"name":"Schubkarre","emoji":"🛞"}},"persons":["Herr Heinze","Aline","Baldur","Cynthia","Debora","Edith"],"solution":[[1,1],[5,3],[0,2],[2,4],[4,5],[3,0]],"killer":2,"clues":["Herr Heinze war im Küchenzelt.","Baldur war in der 1. Reihe von oben.","Aline war in der 4. Spalte von links.","Baldur war direkt neben einer Amphore.","Edith war nicht im Bauwagen.","Cynthia stand nicht auf einer Plane.","Cynthia saß nicht auf einem Klappstuhl.","Niemand war im Bauwagen.","Baldur war weiter links als Cynthia.","Cynthia war weiter links als Debora.","Debora war weiter oben als Aline."],"icon":"🏺"},{"id":42,"title":"Verbrannt","place":"im Kochstudio Feuer & Flamme","level":"mittel","n":6,"rooms":[[2,1,1,1,1,1],[2,0,4,4,4,1],[2,0,0,4,4,1],[2,0,0,0,4,4],[2,2,3,0,3,3],[2,2,3,3,3,3]],"roomNames":["Regie","Maske","Publikum","Spülküche","Studioküche"],"cells":[[4,1,0,1,0,0],[0,4,0,0,2,0],[2,1,0,1,0,3],[0,3,0,2,0,1],[2,2,3,0,1,0],[0,1,0,3,2,4]],"objects":{"1":{"name":"Hocker","emoji":"🪑"},"2":{"name":"Matte","emoji":"🟫"},"3":{"name":"Herd","emoji":"🍳"},"4":{"name":"Kühlschrank","emoji":"🧊"}},"persons":["Frau Wendt","Aljoscha","Brenda","Conny","Dario","Elias"],"solution":[[4,3],[5,1],[3,0],[1,5],[2,2],[0,4]],"killer":4,"clues":["Frau Wendt war in der Regie.","Conny war in der Maske.","Conny war in der 2. Reihe von oben.","Frau Wendt war direkt neben einem Herd.","Brenda war direkt neben einem Herd.","Brenda war nicht in der Regie.","Brenda war nicht in der Spülküche.","Elias war nicht in der Regie.","Aljoscha war weiter links als Dario.","Elias war weiter oben als Brenda.","Dario war weiter oben als Brenda."],"icon":"🍳"},{"id":43,"title":"Spielverderber","place":"im Spielwarenladen Kunterbunt","level":"mittel","n":6,"rooms":[[1,1,2,2,0,0],[1,1,2,0,0,0],[1,1,2,2,0,0],[1,3,2,2,0,0],[1,3,2,4,4,4],[3,3,3,4,4,4]],"roomNames":["Kasse","Spielecke","Laden","Lager","Büro"],"cells":[[2,3,1,0,4,0],[3,0,0,0,1,1],[0,0,1,0,4,0],[0,4,3,0,0,0],[0,0,2,0,1,2],[2,3,0,0,1,2]],"objects":{"1":{"name":"Stuhl","emoji":"🪑"},"2":{"name":"Spielteppich","emoji":"🟫"},"3":{"name":"Puppenhaus","emoji":"🏠"},"4":{"name":"Schaukelpferd","emoji":"🐴"}},"persons":["Herr Schreiber","Amalia","Bogdan","Christel","Dilara","Eva"],"solution":[[0,0],[5,3],[3,5],[1,2],[4,4],[2,1]],"killer":5,"clues":["Bogdan war an der Kasse.","Amalia war in der 4. Spalte von links.","Christel war ganz allein in einem Raum.","Herr Schreiber war weiter links als Eva.","Dilara war weiter links als Bogdan.","Eva war weiter links als Dilara.","Herr Schreiber war weiter oben als Christel.","Dilara war weiter oben als Amalia.","Christel war weiter oben als Eva."],"icon":"🧸"},{"id":44,"title":"Kurzer Prozess","place":"in der Druckerei Schwarz auf Weiß","level":"mittel","n":6,"rooms":[[3,3,3,3,3,3],[2,2,2,2,2,3],[4,4,4,4,2,2],[4,1,1,1,1,2],[1,1,0,0,0,2],[1,0,0,0,0,0]],"roomNames":["Satz","Druckhalle","Versand","Papierlager","Büro"],"cells":[[1,0,2,0,3,4],[0,0,0,0,4,1],[1,0,0,0,0,0],[1,2,0,0,1,3],[0,4,2,2,0,1],[0,3,0,2,0,0]],"objects":{"1":{"name":"Hocker","emoji":"🪑"},"2":{"name":"Matte","emoji":"🟫"},"3":{"name":"Druckmaschine","emoji":"🖨️"},"4":{"name":"Papierstapel","emoji":"📄"}},"persons":["Frau Marx","Anselm","Bonnie","Ciro","Dankwart","Egon"],"solution":[[1,1],[5,2],[4,5],[0,3],[3,4],[2,0]],"killer":2,"clues":["Anselm war in der Setzerei.","Bonnie war im Versand.","Bonnie saß auf einem Hocker.","Dankwart saß auf einem Hocker.","Egon war in der 1. Spalte von links.","Anselm stand nicht auf einer Matte.","Frau Marx war weiter links als Ciro.","Frau Marx war weiter oben als Egon."],"icon":"🖨️"},{"id":45,"title":"Tierisch tot","place":"im Zoo Lindenpark","level":"mittel","n":6,"rooms":[[4,2,2,3,1,1],[4,2,2,3,3,1],[4,4,2,3,1,1],[4,4,2,3,3,1],[4,4,0,0,0,0],[4,0,0,0,0,0]],"roomNames":["Aquarium","Kiosk","Streichelzoo","Affenhaus","Futterküche"],"cells":[[1,1,2,0,2,0],[3,0,0,0,2,0],[0,4,1,1,0,0],[0,0,0,3,3,0],[0,0,0,4,2,2],[1,4,0,0,0,2]],"objects":{"1":{"name":"Bank","emoji":"🪑"},"2":{"name":"Mulchbeet","emoji":"🟫"},"3":{"name":"Baum","emoji":"🌳"},"4":{"name":"Felsen","emoji":"🪨"}},"persons":["Herr Petzold","Aurora","Börge","Cilly","Dina","Elif"],"solution":[[5,2],[4,5],[3,1],[0,0],[1,4],[2,3]],"killer":1,"clues":["Herr Petzold war in der 6. Reihe von oben.","Elif war in der 3. Reihe von oben.","Dina war in der 5. Spalte von links.","Elif war in der 4. Spalte von links.","Börge war nicht im Aquarium.","Cilly war nicht im Streichelzoo.","Herr Petzold stand nicht auf einem Mulchbeet.","Börge war weiter links als Aurora.","Cilly war weiter links als Dina.","Cilly war weiter oben als Börge.","Dina war weiter oben als Börge."],"icon":"🦁"},{"id":46,"title":"Die letzte Fahrt","place":"in der Autowerkstatt Kolbenfresser","level":"mittel","n":6,"rooms":[[1,1,4,4,2,2],[1,1,3,4,2,2],[1,3,3,4,4,2],[0,0,3,3,4,2],[0,0,3,4,4,2],[0,0,3,3,2,2]],"roomNames":["Lackiererei","Büro","Waschhalle","Werkstatt","Ersatzteillager"],"cells":[[3,0,0,4,1,3],[2,0,0,0,0,0],[4,1,0,2,2,3],[1,0,2,0,1,2],[0,0,3,2,0,0],[0,1,4,1,0,0]],"objects":{"1":{"name":"Hocker","emoji":"🪑"},"2":{"name":"Ölmatte","emoji":"🟫"},"3":{"name":"Hebebühne","emoji":"🚗"},"4":{"name":"Reifenstapel","emoji":"🛞"}},"persons":["Frau Gross","Adam","Bastienne","Cesar","Diego","Ernst"],"solution":[[0,4],[1,0],[5,1],[2,3],[4,5],[3,2]],"killer":4,"clues":["Frau Gross saß auf einem Hocker.","Bastienne war in der 6. Reihe von oben.","Ernst war in der 4. Reihe von oben.","Bastienne war direkt neben einem Reifenstapel.","Adam war nicht in der Lackiererei.","Adam war nicht in der Werkstatt.","Bastienne war nicht in der Werkstatt.","Cesar war ganz allein in einem Raum.","Adam war weiter links als Cesar.","Ernst war weiter links als Diego."],"icon":"🔧"},{"id":47,"title":"Schlussbild","place":"im Kino Lichtspielhaus","level":"mittel","n":6,"rooms":[[3,3,3,1,1,1],[3,0,1,1,1,1],[3,0,1,1,1,1],[3,0,0,2,4,4],[3,0,0,2,4,4],[3,0,2,2,2,4]],"roomNames":["Saal","Büro","Foyer","Vorführraum","Lager"],"cells":[[0,1,1,0,2,3],[4,0,2,3,0,0],[0,4,0,2,0,0],[0,3,2,1,0,0],[0,2,3,1,0,1],[0,0,4,0,0,0]],"objects":{"1":{"name":"Kinosessel","emoji":"💺"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Projektor","emoji":"📽️"},"4":{"name":"Popcornmaschine","emoji":"🍿"}},"persons":["Herr Kaiser","Alessia","Bela","Cathrin","Dorothea","Emma"],"solution":[[2,3],[5,5],[3,0],[1,4],[0,2],[4,1]],"killer":3,"clues":["Herr Kaiser war in der 3. Reihe von oben.","Bela war direkt neben einem Projektor.","Alessia war nicht im Büro.","Bela war nicht im Saal.","Dorothea war nicht im Büro.","Bela und Emma waren diagonal direkt nebeneinander.","Dorothea war weiter links als Alessia.","Cathrin war weiter links als Alessia.","Emma war weiter links als Dorothea.","Dorothea war weiter oben als Emma."],"icon":"🍿"},{"id":48,"title":"Gipfelsturm","place":"auf der Berghütte Adlerhorst","level":"mittel","n":6,"rooms":[[3,3,3,3,2,2],[4,4,0,3,3,2],[4,4,0,0,0,2],[4,4,0,1,1,2],[4,4,1,1,1,2],[4,4,1,1,1,1]],"roomNames":["Trockenraum","Kapelle","Gaststube","Küche","Lager"],"cells":[[4,0,0,3,0,4],[2,0,1,0,2,1],[4,0,0,1,0,2],[0,1,0,1,0,0],[3,2,3,0,0,0],[1,0,2,3,0,0]],"objects":{"1":{"name":"Bank","emoji":"🪑"},"2":{"name":"Fell","emoji":"🟫"},"3":{"name":"Kachelofen","emoji":"🔥"},"4":{"name":"Rucksack","emoji":"🎒"}},"persons":["Frau Reuter","Ariane","Bernadette","Clement","Domenik","Enno"],"solution":[[1,1],[3,0],[2,3],[4,4],[5,5],[0,2]],"killer":1,"clues":["Bernadette war nicht in der Küche.","Domenik war nicht in der Gaststube.","Frau Reuter stand nicht auf einem Fell.","Frau Reuter war weiter links als Enno.","Bernadette war weiter links als Clement.","Enno war weiter links als Bernadette.","Clement war weiter links als Domenik.","Frau Reuter war weiter oben als Clement.","Bernadette war weiter oben als Ariane."],"icon":"🏔️"},{"id":49,"title":"Fallmasche","place":"in der Strickerei Wollwerk","level":"mittel","n":6,"rooms":[[3,3,0,0,0,0],[3,4,4,4,0,0],[3,4,4,4,0,0],[3,1,4,4,4,2],[3,1,1,2,2,2],[3,3,1,2,2,2]],"roomNames":["Strickstube","Büro","Lager","Laden","Küche"],"cells":[[0,4,0,0,3,1],[0,4,1,4,0,1],[0,3,0,1,3,2],[0,0,2,0,0,0],[0,1,0,0,2,0],[0,1,0,2,0,2]],"objects":{"1":{"name":"Schaukelstuhl","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Spinnrad","emoji":"🧶"},"4":{"name":"Wollkorb","emoji":"🧺"}},"persons":["Herr Falk","Ambros","Berend","Coralie","Dafne","Erna"],"solution":[[0,2],[4,4],[5,0],[3,1],[2,3],[1,5]],"killer":5,"clues":["Coralie war direkt neben einem Spinnrad.","Dafne war direkt neben einem Spinnrad.","Dafne war direkt neben einem Wollkorb.","Ambros war nicht im Büro.","Coralie war weiter links als Ambros.","Ambros war weiter links als Erna.","Herr Falk war weiter oben als Erna.","Ambros war weiter oben als Berend.","Erna war weiter oben als Coralie."],"icon":"🧶"},{"id":50,"title":"Das Rätsel der Villa","place":"in der Villa Rosenrot","level":"mittel","n":6,"rooms":[[3,0,0,2,2,2],[3,0,0,0,2,2],[3,3,0,0,1,1],[3,3,3,1,1,1],[3,3,4,1,1,4],[4,4,4,4,4,4]],"roomNames":["Bibliothek","Speisezimmer","Arbeitszimmer","Salon","Wintergarten"],"cells":[[1,1,0,0,0,0],[3,2,0,0,2,3],[3,2,0,0,0,0],[0,0,4,0,0,0],[4,1,1,0,2,0],[0,3,0,1,4,2]],"objects":{"1":{"name":"Sessel","emoji":"🪑"},"2":{"name":"Teppich","emoji":"🟫"},"3":{"name":"Flügel","emoji":"🎹"},"4":{"name":"Standuhr","emoji":"🕰️"}},"persons":["Frau Adler","Annegret","Brina","Cosmo","Derek","Eduard"],"solution":[[5,0],[3,5],[2,4],[4,2],[1,3],[0,1]],"killer":3,"clues":["Eduard saß auf einem Sessel.","Annegret war in der 4. Reihe von oben.","Frau Adler war direkt neben einem Flügel.","Cosmo war direkt neben einer Standuhr.","Derek stand nicht auf einem Teppich.","Derek saß nicht auf einem Sessel.","Annegret und Brina waren diagonal direkt nebeneinander.","Brina war weiter links als Annegret.","Cosmo war weiter links als Derek.","Eduard war weiter oben als Frau Adler."],"icon":"🏰"}];
+const PCOL = ["var(--pV)","var(--pA)","var(--pB)","var(--pC)","var(--pD)","var(--pE)"];
+const BLOCKED = [3,4];
+const LEVELS = {leicht:"leicht", mittel:"mittel"};
+const app = document.getElementById("app"), modal = document.getElementById("modal"), card = document.getElementById("card");
+const hueOf = id => Math.round((id * 137.508 + 12) % 360);
+const store = {
+  get(k,d){ try{ const v = localStorage.getItem("tatort:"+k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem("tatort:"+k, JSON.stringify(v)); }catch(e){} }
+};
+let solved = store.get("solved", {});
+let cur = null;
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function tokLabel(p, i){ return i === 0 ? "☠" : p.persons[i][0]; }
+function setHue(h){ document.documentElement.style.setProperty("--h", h); }
+function dat(name){ return name.replace(/^Herr /, "Herrn "); }
+
+function showModal(html){ card.innerHTML = html; modal.classList.add("on"); }
+function closeModal(){ modal.classList.remove("on"); }
+modal.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+
+function ask(msg, yes, onYes){
+  showModal(`<h3>${esc(msg)}</h3><div class="acts" style="margin-top:16px"><button class="btn primary" id="aYes">${esc(yes)}</button><button class="btn" id="aNo">Abbrechen</button></div>`);
+  document.getElementById("aNo").onclick = closeModal;
+  document.getElementById("aYes").onclick = () => { closeModal(); onYes(); };
+}
+
+function rules(){
+  showModal(`<div class="big">🕵️</div><h3>So wird ermittelt</h3><ul>
+    <li>In jeder <b>Zeile</b> und jeder <b>Spalte</b> steht genau <b>eine</b> Person, auch das Opfer ☠.</li>
+    <li>Auf <b>Hindernissen</b> (in der Legende rot markiert) kann niemand stehen.</li>
+    <li>„Neben“ heißt direkt waagerecht oder senkrecht angrenzend.</li>
+    <li>Der <b>Täter</b> ist die einzige Person, die mit dem Opfer im selben Raum war.</li>
+    <li>Person antippen, dann Feld antippen. Mit ✕ schließt du Felder aus. Hinweise kannst du abhaken.</li>
+  </ul><div class="acts"><button class="btn primary" id="rOk">Los geht's</button></div>`);
+  document.getElementById("rOk").onclick = () => { store.set("seenRules", true); closeModal(); };
+}
+
+function home(){
+  cur = null; setHue(285);
+  try{ history.replaceState(null, "", location.pathname); }catch(e){}
+  const n = Object.keys(solved).length;
+  const groups = [["Einsteiger","4×4 · leicht",p=>p.n===4],["Ermittler","5×5 · leicht",p=>p.n===5&&p.level==="leicht"],["Kommissar","5×5 · mittel",p=>p.n===5&&p.level==="mittel"],["Meisterdetektiv","6×6 · mittel",p=>p.n===6]];
+  let h = `<section class="hero"><div class="kicker">Krimi-Logikrätsel</div><h1>Tatort-Raster</h1>
+    <p>50 Fälle, ein Prinzip: Stell alle an ihren Platz, dann weißt du, wer es war.</p>
+    <div class="hero-row"><span class="pill">${n} / ${PUZZLES.length} gelöst</span><div class="meter"><i style="width:${n/PUZZLES.length*100}%"></i></div><button class="pill btn" id="rulesBtn">Regeln</button></div></section>`;
+  for (const [name, sub, f] of groups){
+    h += `<div class="group"><h3>${name} <small>${sub}</small></h3><div class="tiles">`;
+    for (const p of PUZZLES.filter(f)){
+      h += `<button class="tile${solved[p.id]?" done":""}" style="--h:${hueOf(p.id)}" data-id="${p.id}" aria-label="Fall ${p.id}: ${esc(p.title)}"><span class="e">${p.icon}</span><b>${p.id}</b></button>`;
+    }
+    h += `</div></div>`;
+  }
+  h += `<div class="foot">Alle Fälle sind eindeutig lösbar.<br><button id="resetAll">Fortschritt löschen</button></div>`;
+  app.innerHTML = h;
+  app.querySelectorAll(".tile").forEach(b => b.onclick = () => openCase(+b.dataset.id));
+  document.getElementById("rulesBtn").onclick = rules;
+  document.getElementById("resetAll").onclick = () => ask("Gesamten Fortschritt löschen?", "Löschen", () => {
+    solved = {}; store.set("solved", solved); PUZZLES.forEach(p => store.set("state"+p.id, null)); home(); });
+  window.scrollTo(0,0);
+}
+
+function openCase(id){
+  const p = PUZZLES.find(x => x.id === id);
+  const st = store.get("state"+id, null);
+  cur = { p, place: st ? st.place : p.persons.map(() => null), marks: new Set(st ? st.marks : []), used: new Set(st ? st.used : []), sel: 1, mark: false, msg: "", warn: false };
+  if (cur.place[cur.sel]) { const f = cur.place.findIndex(x => !x); if (f >= 0) cur.sel = f; }
+  setHue(hueOf(id));
+  try{ history.replaceState(null, "", "#"+id); }catch(e){}
+  render(); window.scrollTo(0,0);
+  if (!store.get("seenRules", false)) rules();
+}
+
+function save(){ store.set("state"+cur.p.id, { place: cur.place, marks: [...cur.marks], used: [...cur.used] }); }
+function whoAt(r,c){ return cur.place.findIndex(x => x && x[0]===r && x[1]===c); }
+function conflicts(){
+  const bad = new Set();
+  cur.place.forEach((a,i) => { if (!a) return; cur.place.forEach((b,j) => { if (i!==j && b && (a[0]===b[0] || a[1]===b[1])) bad.add(i); }); });
+  return bad;
+}
+function roomColor(k){ const h = hueOf(cur.p.id) + k * 61 + 20; return `hsl(${h % 360} 78% ${k % 2 ? 84 : 80}%)`; }
+
+function clueHtml(text){
+  // Namen fett hervorheben
+  const ps = cur.p.persons, order = ps.map((_, i) => i).sort((a, b) => ps[b].length - ps[a].length);
+  const re = new RegExp(order.map(i => ps[i].replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "g");
+  let out = "", last = 0, m;
+  while ((m = re.exec(text))){ const i = ps.indexOf(m[0]); out += esc(text.slice(last, m.index)) + `<span class="nm" style="color:${PCOL[i]}">${esc(m[0])}</span>`; last = m.index + m[0].length; }
+  return out + esc(text.slice(last));
+}
+
+function render(){
+  const p = cur.p, n = p.n, o = p.objects, bad = conflicts();
+  const first = {}, span = {};
+  for (let r=0;r<n;r++) for (let c=0;c<n;c++){
+    const k = p.rooms[r][c]; let run = 1;
+    while (c+run<n && p.rooms[r][c+run]===k) run++;
+    if (!(k in span) || run > span[k] + (r - +first[k].split(",")[0]) * 0.34){ span[k] = run; first[k] = r+","+c; }
+  }
+  let g = "";
+  for (let r=0;r<n;r++) for (let c=0;c<n;c++){
+    const k = p.rooms[r][c], t = p.cells[r][c], cls = ["cell"];
+    if (r===0 || p.rooms[r-1][c]!==k) cls.push("wt");
+    if (r===n-1 || p.rooms[r+1][c]!==k) cls.push("wb");
+    if (c===0 || p.rooms[r][c-1]!==k) cls.push("wl");
+    if (c===n-1 || p.rooms[r][c+1]!==k) cls.push("wr");
+    if (BLOCKED.includes(t)) cls.push("blocked");
+    if (t===2) cls.push("deco");
+    const who = whoAt(r,c);
+    if (who>=0 && bad.has(who)) cls.push("conflict");
+    let inner = first[k]===r+","+c ? `<span class="rl" style="max-width:calc(${span[k]*100}% - 6px)">${esc(p.roomNames[k])}</span>` : "";
+    if (t) inner += `<span class="obj">${o[t].emoji}</span>`;
+    if (who>=0) inner += `<span class="tok" style="background:${PCOL[who]}">${esc(tokLabel(p, who))}</span>`;
+    else if (cur.marks.has(r+","+c)) inner += `<span class="x">✕</span>`;
+    g += `<div class="${cls.join(" ")}" style="background-color:${roomColor(k)}" data-r="${r}" data-c="${c}" title="${esc(p.roomNames[k])}${t?" · "+esc(o[t].name):""}">${inner}</div>`;
+  }
+  const chips = p.persons.map((nm,i) => `<button class="chip${!cur.mark && cur.sel===i?" sel":""}${cur.place[i]?" placed":""}" data-i="${i}"><span class="d" style="background:${PCOL[i]}">${esc(tokLabel(p,i))}</span>${esc(i===0 ? nm : nm)}</button>`).join("")
+    + `<button class="chip mk${cur.mark?" sel":""}" id="mk"><span class="d">✕</span>Aus</button>`;
+  const legend = [1,2,3,4].map(t => `<span${BLOCKED.includes(t)?' class="blk"':""}>${o[t].emoji} ${esc(o[t].name)}</span>`).join("");
+  const clues = p.clues.map((c,i) => `<button class="clue${cur.used.has(i)?" used":""}" data-i="${i}"><span class="n">${i+1}</span><span>${clueHtml(c)}</span></button>`).join("");
+  const status = cur.msg || (cur.mark ? "Tippe Felder an, um sie auszuschließen." : `${esc(p.persons[cur.sel])} ist gewählt. Tippe auf ein Feld.`);
+  app.innerHTML = `
+  <div class="top"><button class="ib" id="back" aria-label="Zur Übersicht">←</button>
+    <div class="t"><h2>${p.icon} ${esc(p.title)}</h2><div class="sub">Fall ${p.id} · ${n}×${n} · ${LEVELS[p.level]}${solved[p.id]?" · ✓ gelöst":""}</div></div>
+    <button class="ib" id="help" aria-label="Regeln">?</button><button class="ib" id="menu" aria-label="Optionen">⋯</button></div>
+  <div class="story"><b>${esc(p.persons[0])}</b> wurde ${esc(p.place)} tot aufgefunden. Wer war mit dem Opfer allein im Raum?</div>
+  <div class="play">
+    <div class="boardcol">
+      <div class="board" style="grid-template-columns:repeat(${n},1fr);grid-template-rows:repeat(${n},1fr)">${g}</div>
+      <div class="legend">${legend}</div>
+      <div class="chips">${chips}</div>
+      <div class="status${cur.warn?" warn":""}">${status}</div>
+    </div>
+    <div class="clues">${clues}<div class="clue rule"><span class="n">!</span><span>Der Täter war als Einzige(r) mit dem Opfer im selben Raum.</span></div></div>
+  </div>`;
+  bind();
+}
+
+function bind(){
+  document.getElementById("back").onclick = home;
+  document.getElementById("help").onclick = rules;
+  document.getElementById("menu").onclick = menu;
+  app.querySelectorAll(".cell").forEach(el => el.onclick = () => tap(+el.dataset.r, +el.dataset.c));
+  app.querySelectorAll(".chip[data-i]").forEach(el => el.onclick = () => { cur.sel = +el.dataset.i; cur.mark = false; cur.msg = ""; cur.warn = false; render(); });
+  document.getElementById("mk").onclick = () => { cur.mark = !cur.mark; cur.msg = ""; cur.warn = false; render(); };
+  app.querySelectorAll(".clue[data-i]").forEach(el => el.onclick = () => { const i = +el.dataset.i; cur.used.has(i) ? cur.used.delete(i) : cur.used.add(i); save(); render(); });
+}
+
+function menu(){
+  const p = cur.p;
+  showModal(`<h3>Fall ${p.id}</h3><p>${esc(p.title)}</p><div class="acts" style="flex-direction:column">
+    <button class="btn" id="mReset">↺ Neu anfangen</button>
+    <button class="btn" id="mReveal">🔎 Lösung zeigen</button>
+    ${p.id < PUZZLES.length ? `<button class="btn" id="mNext">Nächster Fall →</button>` : ""}
+    <button class="btn primary" id="mClose">Weiter ermitteln</button></div>`);
+  document.getElementById("mClose").onclick = closeModal;
+  document.getElementById("mReset").onclick = () => { closeModal(); ask("Diesen Fall zurücksetzen?", "Zurücksetzen", () => {
+    cur.place = p.persons.map(() => null); cur.marks.clear(); cur.used.clear(); cur.sel = 1; cur.msg = ""; cur.warn = false; save(); render(); }); };
+  document.getElementById("mReveal").onclick = () => { closeModal(); ask("Wirklich die Lösung zeigen?", "Lösung zeigen", () => {
+    cur.place = p.solution.map(x => [...x]); save(); render(); result(true); }); };
+  const nx = document.getElementById("mNext"); if (nx) nx.onclick = () => { closeModal(); openCase(p.id + 1); };
+}
+
+function tap(r,c){
+  const p = cur.p, key = r+","+c;
+  cur.msg = ""; cur.warn = false;
+  if (cur.mark){
+    if (whoAt(r,c) >= 0) return;
+    cur.marks.has(key) ? cur.marks.delete(key) : cur.marks.add(key);
+    save(); render(); return;
+  }
+  if (BLOCKED.includes(p.cells[r][c])){ cur.msg = `${p.objects[p.cells[r][c]].name}: Hier kann niemand stehen.`; cur.warn = true; render(); return; }
+  const who = whoAt(r,c);
+  if (who >= 0){
+    cur.place[who] = null;
+    if (who !== cur.sel){ cur.sel = who; save(); render(); return; }
+  } else {
+    cur.place[cur.sel] = [r,c];
+    cur.marks.delete(key);
+    const nf = p.persons.findIndex((_,i) => !cur.place[i]);
+    if (nf >= 0) cur.sel = nf;
+  }
+  save();
+  if (cur.place.every(x => x)){
+    const ok = p.solution.every((s,i) => cur.place[i][0]===s[0] && cur.place[i][1]===s[1]);
+    if (ok){ render(); result(false); return; }
+    cur.msg = "Alle platziert, aber etwas stimmt noch nicht. Prüfe die Hinweise."; cur.warn = true;
+  }
+  render();
+}
+
+function confetti(){
+  const box = document.createElement("div"); box.className = "confetti";
+  const cols = ["#ff6b3d","#f72585","#7209b7","#4cc9f0","#2b9348","#ffd43b"];
+  for (let i=0;i<70;i++){
+    const e = document.createElement("i");
+    e.style.left = Math.random()*100 + "%"; e.style.background = cols[i % cols.length];
+    e.style.animationDelay = Math.random()*0.5 + "s"; e.style.animationDuration = 1.2 + Math.random()*1 + "s";
+    box.appendChild(e);
+  }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 2800);
+}
+
+function result(revealed){
+  const p = cur.p, [vr,vc] = p.solution[0], room = p.roomNames[p.rooms[vr][vc]];
+  if (!revealed){ solved[p.id] = true; store.set("solved", solved); confetti(); }
+  showModal(`<div class="big">${revealed ? "🔎" : "🎉"}</div><h3>${revealed ? "Die Auflösung" : "Fall gelöst!"}</h3>
+    <p><b style="color:${PCOL[p.killer]}">${esc(p.persons[p.killer])}</b> war als Einzige(r) mit ${esc(dat(p.persons[0]))} im Raum „${esc(room)}“ und ist damit der Täter.</p>
+    <div class="acts">${p.id < PUZZLES.length ? `<button class="btn primary" id="rNext">Nächster Fall →</button>` : ""}<button class="btn" id="rHome">Übersicht</button></div>`);
+  const nx = document.getElementById("rNext"); if (nx) nx.onclick = () => { closeModal(); openCase(p.id + 1); };
+  document.getElementById("rHome").onclick = () => { closeModal(); home(); };
+}
+
+const start = parseInt(location.hash.slice(1));
+if (start >= 1 && start <= PUZZLES.length) openCase(start); else home();
+</script>
+</body>
+</html>
